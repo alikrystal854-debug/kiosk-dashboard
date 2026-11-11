@@ -1,0 +1,11 @@
+{
+  "name": "CampConnect",
+  "short_name": "CampConnect",
+  "description": "Your campsite phone link for CampConnect kiosk updates.",
+  "start_url": "/mobile/",
+  "scope": "/mobile/",
+  "display": "standalone",
+  "background_color": "#fbfaf5",
+  "theme_color": "#103d3b",
+  "icons": [{ "src": "/mobile/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
