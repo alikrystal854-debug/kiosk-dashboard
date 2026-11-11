@@ -1,1 +1,1 @@
-# kiosk-dashboard
+# CAMPCONECT-Phone-Application

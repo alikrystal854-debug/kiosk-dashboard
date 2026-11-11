@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e6f3ec">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>CampConnect</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="booting">
+  <!-- Preloader: runs real checks against the kiosk before the app is shown -->
+  <div id="boot" class="boot" role="status" aria-live="polite">
+    <div class="boot-inner">
+      <svg class="boot-scene" viewBox="0 0 240 130" aria-hidden="true">
+        <g class="boot-sun"><circle cx="120" cy="72" r="30"/></g>
+        <path class="b-ridge" d="M0 100 40 60 70 85 105 45 140 88 175 55 210 85 240 70V130H0Z"/>
+        <path class="b-ground" d="M0 108H240V130H0Z"/>
+        <path class="b-tent" d="M92 112 120 66 148 112Z"/><path class="b-door" d="M112 112 120 92 128 112Z"/>
+        <g class="b-fire"><path d="M176 112c-9 0-8-10-3-15 0 6 6 6 7-2 7 8 5 17-4 17Z"/></g>
+      </svg>
+      <h2 id="bootTitle">Setting up camp</h2>
+      <p id="bootMsg">Checking that everything works…</p>
+      <ul id="bootSteps" class="boot-steps"></ul>
+      <div class="boot-bar" aria-hidden="true"><b></b></div>
+      <div class="boot-foot"><span id="bootPct">0%</span>
+        <div id="bootRetry" class="boot-retry" hidden><button id="bootAgain" class="button primary" type="button">Try again</button><button id="bootSkip" class="button ghost" type="button">Continue anyway</button></div>
+      </div>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="CampConnect home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="m4 24 10-16 6 9 3-4 5 11H4Z"/></svg></span><span class="brand-copy"><b>CampConnect</b><small>Campsite phone</small></span></a>
+      <div class="topbar-tools"><button id="linkState" class="connection" type="button" title="Tap to change the kiosk address" aria-label="Kiosk connection status. Tap to change kiosk address."><i></i><span>Checking kiosk</span></button><button id="connectPointB" class="alert-toggle" type="button" title="Pair the ESP32 Point B over Bluetooth LE">Connect Point B</button><button id="enableSosAlerts" class="alert-toggle" type="button" aria-pressed="false">Enable SOS sound</button></div>
+    </header>
+
+    <section id="loginPanel" class="login-view" hidden>
+      <section class="hero">
+        <div class="hero-copy"><span class="eyebrow">Your Campconnect, in sync</span><h1>Camp days, <em>connected.</em></h1><p>Helpful updates from your campsite, right in your pocket.</p></div>
+      </section>
+      <form id="loginForm" class="login-card">
+        <div class="login-heading"><span class="eyebrow">Welcome back</span><h2>Sign in to Campconnect system!</h2><p>Use your staff or owner account.</p></div>
+        <label>Account type<select name="role"><option value="staff">Staff</option><option value="owner">Owner / Administrator</option></select></label>
+        <label>Username<input name="username" required autocomplete="username" autocapitalize="none" placeholder="Your username"></label>
+        <label>Password<input name="password" required type="password" autocomplete="current-password" placeholder="Your password"></label>
+        <button class="button primary" type="submit"><span>Sign in</span><b aria-hidden="true">→</b></button>
+        <p id="loginError" class="error" aria-live="polite"></p>
+        <p class="privacy-note"><i aria-hidden="true"></i> Private connection to your campsite Campconnect!</p>
+      </form>
+    </section>
+
+    <section id="appPanel" class="dashboard" hidden>
+      <section class="welcome reveal">
+        <div><span class="eyebrow">Camp operations</span><h1>Your campsite, at a glance.</h1><p id="accountLabel">Signed in</p></div>
+        <button id="signOut" class="button outline" type="button">Sign out</button>
+      </section>
+
+      <section class="stats reveal" aria-label="Campsite summary">
+        <article class="stat t1"><span class="ico">!</span><div><small>Open alerts</small><strong id="statAlerts">0</strong></div></article>
+        <article class="stat t2"><span class="ico">↯</span><div><small>Responding</small><strong id="statResponders">0</strong></div></article>
+        <article class="stat t3"><span class="ico">⌁</span><div><small>LoRa response</small><strong id="statLink">—</strong></div></article>
+        <article class="stat t4"><span class="ico" id="statMetricIcon">₱</span><div><small id="statMetricLabel">Today's coin total</small><strong id="statRevenue">—</strong></div></article>
+      </section>
+
+      <section class="content-section reveal" aria-labelledby="alertsTitle">
+        <div class="section-heading"><div><span class="eyebrow">Live response</span><h2 id="alertsTitle">Current SOS</h2></div><span id="newCount" class="badge">0 open</span></div>
+        <div id="alerts" class="stack"><p class="empty">Loading current SOS…</p></div>
+      </section>
+
+      <section class="content-section reveal archive-section" aria-labelledby="pastSosTitle">
+        <div class="section-heading"><div><span class="eyebrow">Yearly archive</span><h2 id="pastSosTitle">Past SOS Records</h2></div><span id="pastSosCount" class="badge">0 records</span></div>
+        <div class="archive-controls"><label for="archiveYear">Year<select id="archiveYear" aria-label="Select SOS archive year"></select></label><button id="exportPastSos" class="button archive-export" type="button">Export this year ↓</button></div>
+        <div class="archive-wrap"><table class="archive-table"><thead><tr><th>SOS</th><th>Sent</th><th>Final status</th><th>Responder</th><th>Response received</th><th>Resolved</th><th>Time to response</th></tr></thead><tbody id="pastSosRows"><tr><td colspan="7" class="archive-empty">Loading past SOS…</td></tr></tbody></table></div>
+      </section>
+
+      <section id="reportsPanel" class="content-section reveal" hidden aria-labelledby="reportsTitle">
+        <div class="section-heading"><div><span class="eyebrow">Owner tools</span><h2 id="reportsTitle">Report files</h2></div></div>
+        <div id="reports" class="stack"><p class="empty">Loading reports…</p></div>
+      </section>
+
+      <div class="status-card reveal"><span class="status-icon" aria-hidden="true">✓</span><p id="appMessage" aria-live="polite">Connecting to your kiosk…</p><i id="tick" class="tick" aria-hidden="true"></i></div>
+    </section>
+    <footer><span class="footer-mark">C</span><span>CampConnect</span><i></i><span>Phone Application System © ItsJustRive</span></footer>
+  </main>
+  <div class="reply-popup" id="camperReplyPopup" role="alert" hidden><small>MESSAGE FROM POINT A</small><b id="camperReplyPopupText"></b><span>This message will close in 10 seconds. Replies are disabled.</span></div>
+  <dialog id="responseCompose" class="response-compose"><form id="responseMessageForm" class="login-card"><button class="x" id="closeResponseCompose" type="button" aria-label="Close">×</button><span class="eyebrow">SOS RESPONSE</span><h2>Message Point A</h2><p>Your message will appear on the kiosk. You can send one message per SOS.</p><input id="responseAlertId" type="hidden"><label for="responseMessage">Message (maximum 100 characters)</label><textarea id="responseMessage" maxlength="100" rows="3" required></textarea><small id="responseMessageCount" class="response-message-count">35 / 100 characters</small><p id="responseMessageError" class="response-message-error" role="alert"></p><div class="actions"><button id="cancelResponseCompose" class="button ghost" type="button">Cancel</button><button id="sendResponseMessage" class="button primary" type="submit">Send response</button></div></form></dialog>
+  <script src="point-b-ble.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
